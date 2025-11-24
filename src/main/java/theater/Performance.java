@@ -1,15 +1,25 @@
 package theater;
 
 /**
- * Class representing a performance of a play..
+ * Class representing a performance of a play.
+ *
+ * @null not allowed
  */
 public class Performance {
 
-    public String playID;
-    public int audience;
+    private String playId;
+    private int audience;
 
-    public Performance(String playID, int audience) {
-        this.playID = playID;
+    public Performance(String playId, int audience) {
+        this.playId = playId;
         this.audience = audience;
+    }
+
+    public String getPlayId() {
+        return playId;
+    }
+
+    public int getAudience() {
+        return audience;
     }
 }
