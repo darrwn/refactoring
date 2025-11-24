@@ -43,20 +43,15 @@ public class StatementPrinter {
                         + invoice.getCustomer()
                         + System.lineSeparator());
 
-        final NumberFormat frmt =
-                NumberFormat.getCurrencyInstance(Locale.US);
-
         for (Performance performance : invoice.getPerformances()) {
 
-            volumeCredits += result1(performance);
+            volumeCredits += getVolumeCredits(performance);
 
             result.append(
                     String.format(
                             "  %s: %s (%s seats)%n",
                             getPlay(performance).getName(),
-                            frmt.format(
-                                    (double) getAmount(performance)
-                                            / Constants.PERCENT_FACTOR),
+                            usd(getAmount(performance)),
                             performance.getAudience()));
 
             totalAmount += getAmount(performance);
@@ -65,9 +60,7 @@ public class StatementPrinter {
         result.append(
                 String.format(
                         "Amount owed is %s%n",
-                        frmt.format(
-                                (double) totalAmount
-                                        / Constants.PERCENT_FACTOR)));
+                        usd(totalAmount)));
         result.append(
                 String.format(
                         "You earned %s credits%n", volumeCredits));
@@ -75,18 +68,25 @@ public class StatementPrinter {
         return result.toString();
     }
 
-    private int result1(Performance performance) {
-        int result1 = 0;
-        result1 += Math.max(
+    private String usd(int amount) {
+        return NumberFormat.getCurrencyInstance(Locale.US)
+                .format((double) amount / Constants.PERCENT_FACTOR);
+    }
+
+    private int getVolumeCredits(Performance performance) {
+        int credits = 0;
+
+        credits += Math.max(
                 performance.getAudience()
                         - Constants.BASE_VOLUME_CREDIT_THRESHOLD,
                 0);
 
         if ("comedy".equals(getPlay(performance).getType())) {
-            result1 += performance.getAudience()
+            credits += performance.getAudience()
                     / Constants.COMEDY_EXTRA_VOLUME_FACTOR;
         }
-        return result1;
+
+        return credits;
     }
 
     private Play getPlay(Performance performance) {
@@ -94,39 +94,38 @@ public class StatementPrinter {
     }
 
     private int getAmount(Performance performance) {
-        int thisAmount = 0;
+        int amount = 0;
 
-        switch (getPlay(performance).getType()
-        ) {
+        switch (getPlay(performance).getType()) {
             case "tragedy":
-                thisAmount = Constants.TRAGEDY_BASE_AMOUNT;
+                amount = Constants.TRAGEDY_BASE_AMOUNT;
                 if (performance.getAudience()
                         > Constants.TRAGEDY_AUDIENCE_THRESHOLD) {
-                    thisAmount += Constants.TRAGEDY_OVER_BASE_CAPACITY_PER_PERSON
+                    amount += Constants.TRAGEDY_OVER_BASE_CAPACITY_PER_PERSON
                             * (performance.getAudience()
                             - Constants.TRAGEDY_AUDIENCE_THRESHOLD);
                 }
                 break;
 
             case "comedy":
-                thisAmount = Constants.COMEDY_BASE_AMOUNT;
+                amount = Constants.COMEDY_BASE_AMOUNT;
                 if (performance.getAudience()
                         > Constants.COMEDY_AUDIENCE_THRESHOLD) {
-                    thisAmount += Constants.COMEDY_OVER_BASE_CAPACITY_AMOUNT
+                    amount += Constants.COMEDY_OVER_BASE_CAPACITY_AMOUNT
                             + (Constants.COMEDY_OVER_BASE_CAPACITY_PER_PERSON
                             * (performance.getAudience()
                             - Constants.COMEDY_AUDIENCE_THRESHOLD));
                 }
-                thisAmount += Constants.COMEDY_AMOUNT_PER_AUDIENCE
+                amount += Constants.COMEDY_AMOUNT_PER_AUDIENCE
                         * performance.getAudience();
                 break;
 
             default:
                 throw new RuntimeException(
                         String.format("unknown type: %s",
-                                getPlay(performance).getType()
-                        ));
+                                getPlay(performance).getType()));
         }
-        return thisAmount;
+
+        return amount;
     }
 }
